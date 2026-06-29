@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Meme Factory</title>
+  <style>
+    :root {
+      --bg: #fdf7ef;
+      --panel: #fffaf3;
+      --paper: #ffffff;
+      --ink: #171717;
+      --muted: #6b6258;
+      --line: #eadfd2;
+      --orange: #ff5a1f;
+      --orange-dark: #c2410c;
+      --green: #0f766e;
+      --red: #b42318;
+      --shadow: 0 18px 50px rgba(70, 47, 24, 0.10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, rgba(255,90,31,.08), transparent 280px), var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { max-width: 1440px; margin: 0 auto; padding: 22px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 18px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark { width: 40px; height: 40px; border-radius: 9px; background: var(--orange); color: white; display: grid; place-items: center; font-weight: 950; }
+    h1 { margin: 0; font-size: 23px; letter-spacing: -0.04em; }
+    .sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+    .badge { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 8px 11px; color: var(--muted); font-size: 12px; font-weight: 750; }
+    .tabs { display: flex; gap: 8px; overflow: auto; margin-bottom: 16px; }
+    .tab { border: 1px solid var(--line); background: rgba(255,255,255,.64); border-radius: 8px; padding: 9px 12px; color: var(--muted); font-size: 13px; font-weight: 800; white-space: nowrap; }
+    .tab.active { background: var(--ink); border-color: var(--ink); color: white; }
+    .grid { display: grid; grid-template-columns: 350px 1fr 340px; gap: 16px; align-items: start; }
+    .card { background: rgba(255,255,255,.76); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+    .section { padding: 15px; }
+    .section + .section { border-top: 1px solid var(--line); }
+    .label { display: block; font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .input, .select, .textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--ink); padding: 10px 11px; outline: none; }
+    .textarea { min-height: 92px; resize: vertical; line-height: 1.4; }
+    .input:focus, .select:focus, .textarea:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,90,31,.14); }
+    .drop { position: relative; border: 1.5px dashed #d9cabb; border-radius: 10px; background: var(--panel); min-height: 190px; display: grid; place-items: center; text-align: center; overflow: hidden; }
+    .drop input { position: absolute; inset: 0; opacity: 0; }
+    .preview { max-width: 100%; max-height: 250px; display: none; object-fit: contain; }
+    .dropcopy { padding: 24px; color: var(--muted); }
+    .seg { display: grid; gap: 7px; grid-template-columns: 1fr 1fr; }
+    .pill { border: 1px solid var(--line); background: white; color: var(--muted); border-radius: 8px; padding: 9px 10px; text-align: left; font-size: 13px; font-weight: 760; }
+    .pill.active { border-color: var(--orange); color: var(--orange-dark); background: #fff1e8; }
+    .primary { width: 100%; border: 0; border-radius: 8px; padding: 13px 14px; background: var(--orange); color: white; font-weight: 900; box-shadow: 0 12px 24px rgba(255,90,31,.23); }
+    .primary:disabled { background: #d6cabf; box-shadow: none; cursor: not-allowed; }
+    .secondary { border: 1px solid var(--line); background: white; color: var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 12px; font-weight: 850; }
+    .hero { padding: 18px; border-bottom: 1px solid var(--line); background: linear-gradient(135deg, #fffaf3, #ffffff); border-radius: 10px 10px 0 0; }
+    .hero h2 { margin: 0; font-size: 30px; line-height: 1.02; letter-spacing: -0.05em; max-width: 820px; }
+    .hero p { max-width: 820px; margin: 10px 0 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
+    .metrics, .scoregrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+    .metric, .item, .post, .agent, .racecard, .gallery-card { border: 1px solid var(--line); background: white; border-radius: 10px; padding: 12px; }
+    .metric b { display: block; font-size: 20px; letter-spacing: -0.03em; overflow-wrap: anywhere; }
+    .metric span, .tiny { color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; }
+    .best { margin: 15px; padding: 15px; border-radius: 10px; background: #171717; color: white; }
+    .best small { color: #f9a27f; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+    .best p { margin: 8px 0 12px; white-space: pre-wrap; line-height: 1.42; }
+    .postgrid, .gallery-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; padding: 15px; }
+    .posthead { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 9px; }
+    .platform { font-weight: 950; }
+    .score { color: var(--green); font-weight: 950; }
+    .post p, .item p, .gallery-card p { margin: 0 0 10px; white-space: pre-wrap; line-height: 1.42; }
+    .why, .mini { color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .pipeline, .list { display: grid; gap: 8px; }
+    .agentrow { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 900; }
+    .agentsummary { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    details.agent summary { cursor: pointer; list-style: none; }
+    .bar { height: 9px; background: #f1e6d8; border-radius: 99px; overflow: hidden; margin-top: 7px; }
+    .bar > i { display: block; height: 100%; background: var(--orange); border-radius: 99px; }
+    .race { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+    .racecard h3 { margin: 0 0 8px; }
+    .canvaswrap { display: grid; gap: 12px; padding: 15px; }
+    canvas { width: 100%; border-radius: 10px; border: 1px solid var(--line); background: white; }
+    .thumb { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
+    .checklist label { display: flex; gap: 8px; align-items: start; margin: 9px 0; color: var(--ink); font-size: 13px; }
+    .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: white; padding: 10px 13px; border-radius: 8px; z-index: 10; font-size: 13px; display: none; }
+    @media (max-width: 1120px) { .grid { grid-template-columns: 1fr; } .postgrid, .metrics, .scoregrid, .race, .gallery-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 680px) { .app { padding: 14px; } .topbar { align-items: flex-start; flex-direction: column; } .postgrid, .metrics, .scoregrid, .race, .gallery-grid, .seg { grid-template-columns: 1fr; } .hero h2 { font-size: 24px; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div id="toast" class="toast"></div>
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">MF</div>
+        <div>
+          <h1>AI Meme Factory</h1>
+          <p class="sub">A 12-agent distribution team for founders. Human-approved, meme-native, built for organic reach.</p>
+        </div>
+      </div>
+      <div class="badge">Cerebras + Gemma 4 - Track 2</div>
+    </header>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="grid">
+      <aside class="card">
+        <div class="section">
+          <label class="label">Launch asset</label>
+          <div class="drop">
+            <input id="imageInput" type="file" accept="image/*" />
+            <img id="preview" class="preview" alt="Uploaded image preview" />
+            <div id="dropCopy" class="dropcopy"><b>Drop a screenshot, meme, founder photo, or demo image.</b><br />Gemma 4 reads the visual context.</div>
+          </div>
+        </div>
+        <div class="section">
+          <label class="label">Persona</label>
+          <select id="persona" class="select"></select>
+        </div>
+        <div class="section">
+          <label class="label">Tone</label>
+          <div id="tones" class="seg"></div>
+        </div>
+        <div class="section">
+          <label class="label">Goal</label>
+          <select id="goal" class="select"></select>
+        </div>
+        <div class="section">
+          <label class="label">Product context</label>
+          <textarea id="context" class="textarea" placeholder="What is the product, launch, bug, demo, or founder moment?"></textarea>
+        </div>
+        <div class="section">
+          <label class="label">Manual Trend Input</label>
+          <textarea id="manualTrends" class="textarea" placeholder="Paste trends: founder mode, demo day panic, AI agents replacing teams, this could have been a spreadsheet"></textarea>
+          <p class="mini">Paste what your audience is reacting to. The agents will adapt your image to it.</p>
+        </div>
+        <div class="section">
+          <button id="runBtn" class="primary" disabled>Run Agent Team</button>
+          <p class="mini" style="margin-bottom:0">Draft/export only. No fake engagement, bot replies, auto-likes, or spam posting.</p>
+        </div>
+      </aside>
+      <section class="card">
+        <div class="hero">
+          <h2 id="headline">One image in. A founder distribution team out.</h2>
+          <p>This is not a caption generator. Gemma 4 sees the image, Cerebras makes the agent workflow feel instant, and the app turns one product moment into ranked posts, meme layouts, a gallery item, a share card, a campaign plan, and next-move coaching.</p>
+          <div id="metrics" class="metrics"></div>
+        </div>
+        <div id="mainView"></div>
+      </section>
+      <aside class="card">
+        <div class="section">
+          <label class="label">Agent pipeline</label>
+          <div id="pipeline" class="pipeline"></div>
+        </div>
+        <div class="section">
+          <label class="label">Demo move</label>
+          <p class="mini">Show the Speed Race, copy the speed receipt, save to Gallery, then download the Share Card. Keep posting human-approved.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const personas = ["Startup founder", "Indie hacker", "Developer", "Product marketer", "AI builder", "Investor", "Creator"];
+    const tones = ["Funny", "Savage", "Wholesome", "Technical", "Investor-friendly", "Unhinged but safe"];
+    const goals = ["Get replies", "Get reposts", "Explain product", "Drive signups", "Announce launch", "Build in public"];
+    const nav = ["Agent Run", "Trend Radar", "Speed Race", "Gallery", "Share Card", "Meme Studio", "Draft Queue", "Campaign", "Analytics", "Launch Kit"];
+    const agentNames = ["Trend Scout","Visual Context","Meme Strategist","X Copywriter","Reddit Copywriter","LinkedIn Copywriter","Instagram Copywriter","Viral Critic","Safety & Authenticity","Campaign Planner","Meme Designer","Engagement Coach"];
+    const demoGallery = [
+      {id: "d1", persona: "AI builder", tone: "Funny", image: "", bestPost: "I uploaded one screenshot and got a launch kit back. This is what founder distribution feels like when it stops being a blank page.", meme: "FROM SCREENSHOT TO LAUNCH PLAN", score: 91, receipt: "12 agents. 31 assets. Demo run."},
+      {id: "d2", persona: "Indie hacker", tone: "Technical", image: "", bestPost: "The product screenshot became the campaign brief, copywriter, critic, and meme designer.", meme: "SHIP FIRST. POLISH AFTER REPLIES.", score: 87, receipt: "12 agents. 24 assets. Demo run."},
+      {id: "d3", persona: "Startup founder", tone: "Investor-friendly", image: "", bestPost: "Distribution should start before launch panic. I built the agent team I wanted before posting.", meme: "LAUNCH DAY WITHOUT PANIC", score: 89, receipt: "12 agents. 29 assets. Demo run."}
+    ];
+    let state = {
+      image: "",
+      tone: tones[0],
+      active: "Agent Run",
+      result: null,
+      loading: false,
+      selectedMeme: 0,
+      drafts: JSON.parse(localStorage.getItem("drafts") || "[]"),
+      gallery: JSON.parse(localStorage.getItem("gallery") || "[]"),
+      metrics: {impressions: 4200, likes: 180, comments: 34, reposts: 51, clicks: 88}
+    };
+    const $ = (id) => document.getElementById(id);
+    const esc = (value) => String(value || "").replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const jsArg = (value) => esc(JSON.stringify(value || ""));
+    const receipt = () => {
+      const m = state.result && state.result.speed_metrics;
+      return m ? `${(state.result.agents || []).length} agents. ${m.variantsGenerated || 0} assets. ${(m.latencyMs / 1000).toFixed(2)} seconds on Cerebras Gemma 4.` : "12 agents. Founder distribution kit. Powered by Cerebras Gemma 4.";
+    };
+    function toast(text) { $("toast").textContent = text; $("toast").style.display = "block"; setTimeout(() => $("toast").style.display = "none", 1800); }
+    function copyText(text) { navigator.clipboard.writeText(text || ""); toast("Copied"); }
+    function xIntent(text) { window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(text || ""), "_blank"); }
+    function saveDraft(index) { const post = state.result.ranked_posts[index]; state.drafts = [{...post, id: Date.now(), status: "Draft"}, ...state.drafts]; localStorage.setItem("drafts", JSON.stringify(state.drafts)); toast("Saved to draft queue"); }
+    function saveGallery() {
+      if (!state.result) return toast("Run agents first");
+      const best = state.result.best_pick || {};
+      const design = (state.result.meme_designs || [])[0] || {};
+      const item = {id: Date.now(), image: state.image, bestPost: best.text, meme: design.caption || design.top_text, score: state.result.launchScore ? state.result.launchScore.overall : 0, persona: $("persona").value, tone: state.tone, receipt: receipt(), created: new Date().toLocaleString()};
+      state.gallery = [item, ...state.gallery];
+      localStorage.setItem("gallery", JSON.stringify(state.gallery));
+      toast("Saved to gallery");
+    }
+    function init() {
+      $("persona").innerHTML = personas.map(x => `<option>${x}</option>`).join("");
+      $("goal").innerHTML = goals.map(x => `<option>${x}</option>`).join("");
+      renderTones();
+      $("imageInput").addEventListener("change", (event) => upload(event.target.files[0]));
+      $("runBtn").addEventListener("click", () => runAgents(""));
+      render();
+    }
+    function renderTones() {
+      $("tones").innerHTML = tones.map(t => `<button class="pill ${t === state.tone ? "active" : ""}" data-tone="${t}">${t}</button>`).join("");
+      $("tones").onclick = (event) => { if (!event.target.dataset.tone) return; state.tone = event.target.dataset.tone; renderTones(); };
+    }
+    function upload(file) {
+      if (!file || !file.type.startsWith("image/")) return toast("Upload a PNG, JPG, or WEBP");
+      const reader = new FileReader();
+      reader.onload = () => { state.image = reader.result; $("preview").src = state.image; $("preview").style.display = "block"; $("dropCopy").style.display = "none"; $("runBtn").disabled = false; };
+      reader.readAsDataURL(file);
+    }
+    async function runAgents(improveFocus) {
+      if (!state.image) return toast("Upload an image first");
+      state.loading = true; state.result = null; render();
+      try {
+        const response = await fetch("/api/agent-run", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            imageDataUri: state.image,
+            persona: $("persona").value,
+            tone: state.tone,
+            goal: $("goal").value,
+            platforms: ["X", "Reddit", "LinkedIn", "Instagram"],
+            productContext: $("context").value,
+            manualTrends: $("manualTrends").value,
+            improveFocus,
+            trendMode: $("manualTrends").value.trim() ? "manual" : "demo"
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Agent run failed");
+        state.result = data; state.active = "Agent Run";
+      } catch (error) { toast(error.message); }
+      finally { state.loading = false; render(); }
+    }
+    function render() {
+      $("tabs").innerHTML = nav.map(tab => `<button class="tab ${tab === state.active ? "active" : ""}" data-tab="${tab}">${tab}</button>`).join("");
+      $("tabs").onclick = (event) => { const tab = event.target.dataset.tab; if (!tab) return; state.active = tab; render(); };
+      const m = state.result && state.result.speed_metrics;
+      $("headline").textContent = m ? receipt() : "One image in. A founder distribution team out.";
+      renderMetrics(m); renderPipeline();
+      const views = {"Agent Run": renderAgentRun, "Trend Radar": renderTrendRadar, "Speed Race": renderSpeedRace, "Gallery": renderGallery, "Share Card": renderShareCard, "Meme Studio": renderMemeStudio, "Draft Queue": renderDraftQueue, "Campaign": renderCampaign, "Analytics": renderAnalytics, "Launch Kit": renderLaunchKit};
+      views[state.active]();
+    }
+    function renderMetrics(m) {
+      const score = state.result && state.result.launchScore;
+      const rows = [["Provider", m ? m.provider : "Cerebras"], ["Model", m ? m.model : "gemma-4-31b"], ["Latency", state.loading ? "running" : m ? `${(m.latencyMs / 1000).toFixed(2)}s` : "--"], ["Launch Score", score ? score.overall + "/100" : "--"]];
+      $("metrics").innerHTML = rows.map(([label, value]) => `<div class="metric"><b>${esc(value)}</b><span>${label}</span></div>`).join("");
+    }
+    function renderPipeline() {
+      const agents = state.result && state.result.agents ? state.result.agents : agentNames.map((name, index) => ({name, status: state.loading && index < 5 ? "running" : "waiting", summary: state.loading && index < 5 ? "Working..." : "Ready", input: "", output: "", why: ""}));
+      $("pipeline").innerHTML = agents.map(agent => `<details class="agent"><summary><div class="agentrow"><span>${esc(agent.name)}</span><span>${agent.durationMs ? agent.durationMs + "ms" : esc(agent.status)}</span></div><div class="agentsummary">${esc(agent.summary)}</div></summary><p class="mini"><b>Input:</b> ${esc(agent.input)}</p><p class="mini"><b>Output:</b> ${esc(agent.output)}</p><p class="mini"><b>Why it matters:</b> ${esc(agent.why)}</p></details>`).join("");
+    }
+    function renderLaunchScore() {
+      const s = state.result && state.result.launchScore;
+      if (!s) return "";
+      const dims = [["Hook clarity", s.hookClarity], ["Visual specificity", s.visualSpecificity], ["Trend fit", s.trendFit], ["Reply potential", s.replyPotential], ["Platform coverage", s.platformCoverage], ["Meme strength", s.memeStrength], ["Founder authenticity", s.founderAuthenticity], ["Speed clarity", s.speedAdvantageClarity], ["CTA strength", s.ctaStrength], ["Safety", s.safetyAuthenticity]];
+      return `<div class="section"><label class="label">Launch Score</label><div class="best"><small>Overall launch readiness</small><p style="font-size:42px;font-weight:950;margin:6px 0">${esc(s.overall)}/100</p><p>${esc(s.topStrength)} Weakness: ${esc(s.biggestWeakness)}</p><button class="secondary" onclick="runAgents(${jsArg(s.biggestWeakness || "")})">Improve Launch</button></div><div class="scoregrid">${dims.map(([k,v]) => `<div class="metric"><b>${esc(v)}</b><span>${esc(k)}</span><div class="bar"><i style="width:${Math.max(0, Math.min(100, Number(v) || 0))}%"></i></div></div>`).join("")}</div><p class="mini">${esc(s.nextImprovement)}</p></div>`;
+    }
+    function renderAgentRun() {
+      if (state.loading) { $("mainView").innerHTML = `<div class="section"><b>Gemma 4 is reading the image and the agent team is drafting...</b></div>`; return; }
+      if (!state.result) { $("mainView").innerHTML = `<div class="section"><b>Upload an image and run the agent team.</b><p class="mini">Demo flow: upload image, paste a manual trend, run agents, show Speed Race, save Gallery, export Share Card.</p></div>`; return; }
+      const best = state.result.best_pick || {}; const posts = state.result.ranked_posts || [];
+      $("mainView").innerHTML = `${renderLaunchScore()}<div class="best"><small>Best pick - ${esc(best.platform)}</small><p>${esc(best.text)}</p><button class="secondary" onclick="copyText(${jsArg(best.text || "")})">Copy best</button> <button class="secondary" onclick="xIntent(${jsArg(best.text || "")})">Open X composer</button> <button class="secondary" onclick="saveGallery()">Save run to Gallery</button></div><div class="postgrid">${posts.map((post, index) => `<article class="post"><div class="posthead"><span class="platform">${esc(post.platform)}</span><span class="score">${esc(post.viral_score)}/100</span></div><p>${esc(post.text)}</p><div class="why">${esc(post.why_it_works)}<br>Risk: ${esc(post.risk_note)}<br>Best window: ${esc(post.posting_window)}</div><div class="actions"><button class="secondary" onclick="copyText(${jsArg(post.text || "")})">Copy</button><button class="secondary" onclick="saveDraft(${index})">Save draft</button>${post.platform === "X" ? `<button class="secondary" onclick="xIntent(${jsArg(post.text || "")})">Open X composer</button>` : ""}</div></article>`).join("")}</div>`;
+    }
+    function renderTrendRadar() {
+      const trends = state.result ? state.result.trend_matches || [] : [];
+      $("mainView").innerHTML = `<div class="section"><label class="label">Manual Trend Input</label><p class="mini">Current input: ${esc($("manualTrends").value || "None. Demo Trend Feed will be used.")}</p></div><div class="section list">${trends.length ? trends.map(t => `<div class="item"><b>${esc(t.topic)}</b><p class="mini">${esc(t.why)} Freshness: ${esc(t.freshness)}/100.</p></div>`).join("") : `<p class="mini">Run agents to populate trend matches.</p>`}</div>`;
+    }
+    function renderSpeedRace() {
+      const b = state.result && state.result.baselineComparison; const m = state.result && state.result.speed_metrics;
+      if (!b || !m) { $("mainView").innerHTML = `<div class="section"><b>Run agents first to generate a Speed Race receipt.</b><p class="mini">Baseline is clearly labeled as placeholder unless BASELINE_PROVIDER_API_KEY is configured.</p></div>`; return; }
+      const cerebrasWidth = 100; const baseWidth = Math.max(12, Math.min(85, (b.cerebras.latencyMs / Math.max(b.baseline.latencyMs, 1)) * 100));
+      $("mainView").innerHTML = `<div class="race"><div class="racecard"><h3>Cerebras Gemma 4</h3><p><b>Completed</b> in ${(b.cerebras.latencyMs / 1000).toFixed(2)}s</p><div class="bar"><i style="width:${cerebrasWidth}%"></i></div><p class="mini">${b.cerebras.variantsGenerated} assets generated. ${m.tokensPerSecond || 0} tokens/sec.</p></div><div class="racecard"><h3>${esc(b.baseline.provider)}</h3><p><b>${esc(b.baseline.status)}</b> ${(b.baseline.latencyMs / 1000).toFixed(2)}s</p><div class="bar"><i style="width:${baseWidth}%;background:#9b8b7a"></i></div><p class="mini">${esc(b.label)}</p></div></div><div class="section"><b>Cerebras generated ${m.variantsGenerated} assets in ${(m.latencyMs / 1000).toFixed(2)} seconds.</b><p class="mini">Speed changes the workflow: founders can test many angles instead of waiting for one caption.</p><button class="primary" onclick="copyText(${jsArg(receipt())})">Copy speed receipt</button></div>`;
+    }
+    function renderGallery() {
+      const items = state.gallery.length ? state.gallery : demoGallery;
+      $("mainView").innerHTML = `<div class="section"><button class="primary" onclick="saveGallery()">Save current run to Gallery</button><p class="mini">Local demo gallery. Connect storage later for public submissions.</p></div><div class="gallery-grid">${items.map(item => `<div class="gallery-card">${item.image ? `<img class="thumb" src="${item.image}">` : `<div class="thumb" style="display:grid;place-items:center;color:var(--muted)">Demo submission</div>`}<p><b>${esc(item.persona)} - ${esc(item.tone)}</b></p><p>${esc(item.bestPost)}</p><p class="mini">Meme: ${esc(item.meme)}<br>Score: ${esc(item.score)}/100<br>${esc(item.receipt)}</p><div class="actions"><button class="secondary" onclick="copyText(${jsArg(item.bestPost || "")})">Copy best</button><button class="secondary" onclick="xIntent(${jsArg(item.bestPost || "")})">Open X composer</button><button class="secondary" onclick="useGallery(${jsArg(item.id)})">Use as example</button>${state.gallery.length ? `<button class="secondary" onclick="removeGallery(${jsArg(item.id)})">Remove</button>` : ""}</div></div>`).join("")}</div>`;
+    }
+    function useGallery(id) { const item = [...state.gallery, ...demoGallery].find(x => String(x.id) === String(id)); if (!item) return; $("context").value = item.bestPost; $("manualTrends").value = item.meme; toast("Loaded example into context"); }
+    function removeGallery(id) { state.gallery = state.gallery.filter(x => String(x.id) !== String(id)); localStorage.setItem("gallery", JSON.stringify(state.gallery)); renderGallery(); }
+    function renderShareCard() {
+      $("mainView").innerHTML = `<div class="canvaswrap"><canvas id="shareCanvas" width="1200" height="675"></canvas><button class="primary" onclick="downloadShareCard()">Download Share Card PNG</button><button class="secondary" onclick="copyText(${jsArg(shareCaption())})">Copy share caption</button></div>`;
+      drawShareCard();
+    }
+    function shareCaption() { const best = state.result && state.result.best_pick; return `${receipt()}\n\n${best ? best.text : "AI Meme Factory turns one image into a founder launch kit."}\n\nBuilt with @Cerebras + Gemma 4.`; }
+    function drawShareCard() {
+      const c = $("shareCanvas"); if (!c) return; const ctx = c.getContext("2d"); const best = state.result && state.result.best_pick; const angle = state.result && state.result.meme_angles && state.result.meme_angles[0];
+      ctx.fillStyle = "#111111"; ctx.fillRect(0,0,1200,675); ctx.fillStyle = "#ff5a1f"; ctx.fillRect(0,0,14,675); ctx.fillStyle = "#fff"; ctx.font = "900 54px Arial"; ctx.fillText("AI Meme Factory", 70, 95); ctx.font = "700 26px Arial"; ctx.fillStyle = "#f9a27f"; ctx.fillText("Powered by Cerebras + Gemma 4", 70, 135); ctx.fillStyle = "#fff"; ctx.font = "700 36px Arial"; wrapCanvas(ctx, best ? best.text : "One image in. A founder distribution team out.", 70, 230, 1020, 45); ctx.fillStyle = "#f9a27f"; ctx.font = "800 28px Arial"; ctx.fillText(receipt(), 70, 560); ctx.fillStyle = "#bdb7af"; ctx.font = "22px Arial"; ctx.fillText(angle ? "Top angle: " + angle.angle : "Ranked posts, meme layouts, campaign plan, and launch score.", 70, 610);
+    }
+    function downloadShareCard() { const a = document.createElement("a"); a.download = "ai-meme-factory-share-card.png"; a.href = $("shareCanvas").toDataURL("image/png"); a.click(); }
+    function renderMemeStudio() {
+      const designs = getMemeDesigns();
+      const design = designs[state.selectedMeme] || designs[0] || {};
+      $("mainView").innerHTML = `
+        <div class="section">
+          <label class="label">Meme choices</label>
+          <div class="postgrid" style="padding:0">
+            ${designs.map((d, i) => `
+              <button class="post" style="text-align:left;${i === state.selectedMeme ? "border-color:var(--orange);background:#fff1e8" : ""}" onclick="selectMeme(${i})">
+                <div class="posthead"><span class="platform">${esc(d.layout || "Meme")}</span><span class="score">#${i + 1}</span></div>
+                <p><b>${esc(d.top_text || "")}</b><br>${esc(d.bottom_text || "")}</p>
+                <p class="mini">${esc(d.caption || "Click to edit this meme.")}</p>
+              </button>
+            `).join("")}
+          </div>
+        </div>
+        <div class="canvaswrap">
+          <label class="label">Edit selected meme</label>
+          <input id="topText" class="input" value="${esc(design.top_text || "ME: I NEED ONE POST")}">
+          <input id="bottomText" class="input" value="${esc(design.bottom_text || "AI MEME FACTORY: HERE ARE 40")}">
+          <input id="captionText" class="input" value="${esc(design.caption || "Speed changes the workflow.")}">
+          <canvas id="memeCanvas" width="1080" height="1080"></canvas>
+          <div class="actions">
+            <button class="primary" onclick="downloadMeme()">Download PNG</button>
+            <button class="secondary" onclick="randomMeme()">Random choice</button>
+            <button class="secondary" onclick="copyText(document.getElementById('topText').value + ' / ' + document.getElementById('bottomText').value)">Copy meme text</button>
+          </div>
+        </div>
+      `;
+      $("topText").addEventListener("input", drawMeme);
+      $("bottomText").addEventListener("input", drawMeme);
+      $("captionText").addEventListener("input", drawMeme);
+      drawMeme();
+    }
+
+    function getMemeDesigns() {
+      const generated = state.result && Array.isArray(state.result.meme_designs) ? state.result.meme_designs : [];
+      if (generated.length) return generated;
+      return [
+        {layout:"Classic top/bottom", top_text:"ME OPTIMIZING MY PYTHON FOR 5 HOURS", bottom_text:"CEREBRAS: 1,500 TOKENS/SEC. ANYWAY.", caption:"The speed gap is the joke."},
+        {layout:"POV", top_text:"POV: YOU FED ONE SCREENSHOT TO GEMMA 4", bottom_text:"AND IT STARTED ACTING LIKE A LAUNCH TEAM", caption:"Instant founder distribution energy."},
+        {layout:"Nobody meme", top_text:"NOBODY:", bottom_text:"ME TURNING A BLOG SCREENSHOT INTO 31 POSTS", caption:"Absurd but accurate."},
+        {layout:"Boss fight", top_text:"FINAL BOSS: THE BLANK TWEET COMPOSER", bottom_text:"UNLOCKED: GEMMA 4 ON CEREBRAS", caption:"Dev Twitter friendly."},
+        {layout:"How it started", top_text:"HOW IT STARTED: ONE SCREENSHOT", bottom_text:"HOW IT'S GOING: FULL DISTRIBUTION KIT", caption:"Simple before/after."},
+        {layout:"Founder panic", top_text:"LAUNCH DAY: WE NEED CONTENT", bottom_text:"CEREBRAS: I ALREADY MADE THE CONTENT", caption:"Relatable launch chaos."}
+      ];
+    }
+
+    function selectMeme(index) {
+      state.selectedMeme = index;
+      renderMemeStudio();
+    }
+
+    function randomMeme() {
+      const designs = getMemeDesigns();
+      state.selectedMeme = Math.floor(Math.random() * designs.length);
+      renderMemeStudio();
+    }
+
+    function drawMeme() {
+      const c = $("memeCanvas"); if (!c) return; const ctx = c.getContext("2d"); const top = $("topText").value; const bottom = $("bottomText").value; c.width = 1080; c.height = 1080; ctx.fillStyle = "#fffaf3"; ctx.fillRect(0,0,1080,1080);
+      const caption = $("captionText") ? $("captionText").value : "";
+      const drawText = (text,y,size=58) => { ctx.font = `900 ${size}px Arial`; ctx.textAlign = "center"; ctx.lineWidth = 12; ctx.strokeStyle = "#000"; ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(0,0,0,.35)"; ctx.shadowBlur = 10; wrapStroke(ctx, text.toUpperCase(), 540, y, 980, size + 10); ctx.shadowBlur = 0; };
+      const drawChrome = () => {
+        const grd = ctx.createLinearGradient(0,0,1080,1080);
+        grd.addColorStop(0,"#fff7ed"); grd.addColorStop(1,"#ffe2c7");
+        ctx.fillStyle = grd; ctx.fillRect(0,0,1080,1080);
+        ctx.fillStyle = "#171717"; ctx.fillRect(0,0,1080,128); ctx.fillRect(0,900,1080,180);
+        ctx.fillStyle = "#ff5a1f"; ctx.fillRect(0,128,1080,10); ctx.fillRect(0,890,1080,10);
+        ctx.fillStyle = "#ff5a1f"; ctx.fillRect(40, 820, 360, 48);
+        ctx.fillStyle = "#fff"; ctx.font = "800 24px Arial"; ctx.textAlign = "left"; ctx.fillText("AI MEME FACTORY", 62, 852);
+      };
+      if (state.image) {
+        const img = new Image();
+        img.onload = () => {
+          drawChrome();
+          const scale = Math.min(830 / img.width, 650 / img.height);
+          const w = img.width * scale; const h = img.height * scale;
+          ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(0,0,0,.18)"; ctx.shadowBlur = 24;
+          ctx.fillRect((1080-w)/2 - 18, 170 - 18, w + 36, h + 36);
+          ctx.shadowBlur = 0; ctx.drawImage(img, (1080-w)/2, 170, w, h);
+          drawText(top, 66, top.length > 34 ? 48 : 58);
+          drawText(bottom, 952, bottom.length > 34 ? 48 : 58);
+          if (caption) { ctx.fillStyle = "#6b6258"; ctx.font = "700 24px Arial"; ctx.textAlign = "center"; ctx.fillText(caption.slice(0, 72), 540, 880); }
+        };
+        img.src = state.image;
+      } else {
+        drawChrome();
+        ctx.fillStyle = "#171717"; ctx.fillRect(110,190,860,610);
+        drawText(top,66); drawText(bottom,952);
+      }
+    }
+    function downloadMeme() { const a = document.createElement("a"); a.download = "ai-meme-factory.png"; a.href = $("memeCanvas").toDataURL("image/png"); a.click(); }
+    function wrapCanvas(ctx, text, x, y, max, lineHeight) { const words = String(text || "").split(" "); let line = ""; for (const word of words) { const test = line + word + " "; if (ctx.measureText(test).width > max && line) { ctx.fillText(line, x, y); line = word + " "; y += lineHeight; } else line = test; } ctx.fillText(line, x, y); }
+    function wrapStroke(ctx, text, x, y, max, lineHeight) { const words = String(text || "").split(" "); let line = ""; for (const word of words) { const test = line + word + " "; if (ctx.measureText(test).width > max && line) { ctx.strokeText(line, x, y); ctx.fillText(line, x, y); line = word + " "; y += lineHeight; } else line = test; } ctx.strokeText(line, x, y); ctx.fillText(line, x, y); }
+    function renderDraftQueue() {
+      $("mainView").innerHTML = `<div class="section list">${state.drafts.length ? state.drafts.map(d => `<div class="item"><b>${esc(d.platform)} - ${esc(d.status)}</b><p>${esc(d.text)}</p><div class="actions"><button class="secondary" onclick="copyText(${jsArg(d.text || "")})">Copy</button>${d.platform === "X" ? `<button class="secondary" onclick="xIntent(${jsArg(d.text || "")})">Open X composer</button>` : ""}<button class="secondary" onclick="removeDraft(${d.id})">Remove</button></div></div>`).join("") : `<p class="mini">Saved posts appear here. Status is local-only for the hackathon demo.</p>`}</div>`;
+    }
+    function removeDraft(id) { state.drafts = state.drafts.filter(d => d.id !== id); localStorage.setItem("drafts", JSON.stringify(state.drafts)); renderDraftQueue(); }
+    function renderCampaign() { const plan = state.result ? state.result.campaign_plan || [] : []; $("mainView").innerHTML = `<div class="section list">${plan.length ? plan.map(r => `<div class="item"><b>${esc(r.day)}: ${esc(r.platform)} - ${esc(r.goal)}</b><p>${esc(r.post)}</p><p class="mini">CTA: ${esc(r.cta)} - Time: ${esc(r.time)}</p></div>`).join("") : `<p class="mini">Run agents to generate a 7-day campaign plan.</p>`}</div>`; }
+    function renderAnalytics() {
+      const m = state.metrics; const engagement = ((Number(m.likes)+Number(m.comments)+Number(m.reposts)) / Math.max(Number(m.impressions), 1) * 100).toFixed(2);
+      $("mainView").innerHTML = `<div class="section list"><div class="metrics">${Object.keys(m).map(k => `<div class="metric"><input class="input analytics-input" data-key="${k}" value="${esc(m[k])}"><span>${esc(k)}</span></div>`).join("")}<div class="metric"><b>${engagement}%</b><span>engagement rate</span></div></div><div class="item"><b>Analytics Coach</b><p class="mini">${esc((state.result && state.result.analytics_recommendations && state.result.analytics_recommendations.double_down) || "Demo insight: specific founder chaos posts usually earn more replies than polished launch copy.")}</p></div></div>`;
+      document.querySelectorAll(".analytics-input").forEach(input => input.addEventListener("input", e => { state.metrics[e.target.dataset.key] = e.target.value; renderAnalytics(); }));
+    }
+    function renderLaunchKit() {
+      const narration = "Founders can build fast, but distribution is still slow. AI Meme Factory is a 12-agent distribution team. Upload one product image. Gemma 4 understands the image. Cerebras runs the agents in seconds. It creates platform-native posts, viral scores, meme assets, a launch campaign, and a human-approved X launch kit. Reply with your screenshot and we will run yours.";
+      const checks = ["Hide sensitive tabs/keys", "Use demo asset", "Run Agent Team", "Show Speed Race", "Show Best X Post", "Show Meme Studio", "Show Launch Kit", "End with reply CTA", "Submit to Discord Track 2", "Post on X with tags @Cerebras and @googlegemma"];
+      $("mainView").innerHTML = `<div class="section"><label class="label">Demo Mode Checklist</label><div class="checklist">${checks.map(c => `<label><input type="checkbox"> ${esc(c)}</label>`).join("")}</div><button class="primary" onclick="copyText(${jsArg(narration)})">Copy Demo Narration</button></div><div class="section"><label class="label">Narration</label><p>${esc(narration)}</p></div>`;
+    }
+    window.copyText = copyText; window.xIntent = xIntent; window.saveDraft = saveDraft; window.removeDraft = removeDraft; window.saveGallery = saveGallery; window.useGallery = useGallery; window.removeGallery = removeGallery; window.runAgents = runAgents; window.downloadShareCard = downloadShareCard; window.downloadMeme = downloadMeme; window.selectMeme = selectMeme; window.randomMeme = randomMeme;
+    init();
+  </script>
+</body>
+</html>
